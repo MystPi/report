@@ -1,0 +1,21 @@
+---
+version: 1.2.3
+title: reports can have attached notes, hints, and text
+---
+Error: Type mismatch
+
+   ┌─[report_test.gleam@13:12-13:14]───────────────────────────────────────────╼
+13 │     Baz -> 50
+╾──┘            ^^ this is the wrong type
+
+Lorem ipsum odor amet, consectetuer adipiscing elit. Rhoncus placerat sem vitae
+hendrerit euismod netus dapibus orci. Commodo donec non felis amet natoque
+accumsan?
+
+Hint: Lorem ipsum odor amet, consectetuer adipiscing elit. Rhoncus placerat sem
+      vitae hendrerit euismod netus dapibus orci. Commodo donec non felis amet
+      natoque accumsan?
+
+Note: Lorem ipsum odor amet, consectetuer adipiscing elit. Rhoncus placerat sem
+      vitae hendrerit euismod netus dapibus orci. Commodo donec non felis amet
+      natoque accumsan?

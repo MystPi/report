@@ -1,0 +1,9 @@
+---
+version: 1.2.3
+title: a minimal info report
+---
+Info: Invalid syntax
+
+  ┌─[report_test.gleam@1:1-1:6]────────────────────────────────────────────────╼
+1 │ imprt gleam
+╾─┘ ^^^^^ I don't know what this means

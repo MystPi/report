@@ -1,0 +1,11 @@
+---
+version: 1.2.3
+title: context and positions can refer to the same line
+---
+Error: Type mismatch
+
+   ┌─[report_test.gleam@13:12-13:14]───────────────────────────────────────────╼
+   │         ┌─ in this case branch
+   │         ┆
+13 │     Baz -> 50
+╾──┘            ^^ this is the wrong type
