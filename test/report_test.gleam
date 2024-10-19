@@ -167,3 +167,16 @@ pub fn number_padding_test() {
   |> report.to_string(style:)
   |> birdie.snap("line numbers are padded according to their width")
 }
+
+pub fn string_width_test() {
+  report.info(
+    file:,
+    source: string.repeat("안녕하세요\n", 3),
+    message: "editors may not display characters the same way",
+    from: #(1, 5),
+    to: #(3, 3),
+    label: "",
+  )
+  |> report.to_string(style:)
+  |> birdie.snap("pointer based on string width on non-ending lines")
+}

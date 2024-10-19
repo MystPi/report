@@ -5,7 +5,7 @@ import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/string
 import gleam_community/ansi
-import term_size
+import string_width
 
 // TYPES -----------------------------------------------------------------------
 
@@ -277,6 +277,12 @@ fn init_ctx(report: Report, has_style: Bool) -> Ctx {
     }
     |> style
 
+  let max_width =
+    string_width.get_terminal_size()
+    |> result.map(fn(size) { size.columns })
+    |> result.unwrap(80)
+    |> int.min(80)
+
   Ctx(
     color:,
     dim: style(ansi.dim),
@@ -284,7 +290,7 @@ fn init_ctx(report: Report, has_style: Bool) -> Ctx {
     hint_color: style(ansi.green),
     note_color: style(ansi.blue),
     context_color: style(ansi.cyan),
-    max_width: term_size.columns() |> result.unwrap(80) |> int.min(80),
+    max_width:,
     relevant_lines:,
     number_offset:,
   )
@@ -297,7 +303,7 @@ fn render_header(report: Report, ctx: Ctx) -> String {
     Info -> "Info"
   }
 
-  let prefix = ctx.color(level <> ": ")
+  let prefix = ctx.color(level <> ":")
 
   report.message |> wrap_with_prefix(prefix, ctx) |> ctx.bold
 }
@@ -306,7 +312,7 @@ fn render_location(report: Report, ctx: Ctx) -> String {
   let span =
     pos_to_string(report.pos.from) <> "-" <> pos_to_string(report.pos.to)
   let loc = "[" <> report.file <> "@" <> span <> "]"
-  let start = gutter(inner: "", after: "┌─" <> loc, ctx:)
+  let start = gutter(inner: None, after: "┌─" <> loc, ctx:)
   let end =
     string.repeat("─", ctx.max_width - string.length(start) - 1) <> "╼"
 
@@ -317,8 +323,11 @@ fn render_line(line: #(Int, String), report: Report, ctx: Ctx) -> List(String) {
   let #(line_number, text) = line
 
   let source_line =
-    gutter(inner: int.to_string(line_number), after: "│ " <> text, ctx:)
-    |> ctx.dim
+    gutter(
+      inner: Some(int.to_string(line_number) |> ctx.dim),
+      after: ctx.dim("│ ") <> text,
+      ctx:,
+    )
 
   let pointer = render_pointer(report, line, ctx)
 
@@ -332,7 +341,7 @@ fn render_line(line: #(Int, String), report: Report, ctx: Ctx) -> List(String) {
 }
 
 fn render_context(context: Context, ctx: Ctx) -> List(String) {
-  let prefix = gutter(inner: "", after: "│", ctx:)
+  let prefix = gutter(inner: None, after: "│", ctx:) |> ctx.dim
   let padding = string.repeat(" ", context.pos.column)
   let start = prefix <> padding
 
@@ -359,7 +368,7 @@ fn render_pointer(
 
   let prefix = case line_number == pos.to.line {
     True -> ctx.dim("╾" <> string.repeat("─", ctx.number_offset) <> "┘")
-    False -> gutter(inner: "·", after: "│", ctx:) |> ctx.dim
+    False -> gutter(inner: Some("·"), after: "│", ctx:) |> ctx.dim
   }
 
   let padding =
@@ -369,20 +378,22 @@ fn render_pointer(
     }
     |> string.repeat(" ", _)
 
-  let width = case pos.from.line, pos.to.line {
-    // The pointer starts and ends on the same line
-    from, to if from == to -> pos.to.column - pos.from.column
+  let width =
+    case pos.from.line, pos.to.line {
+      // The pointer starts and ends on the same line
+      from, to if from == to -> pos.to.column - pos.from.column
 
-    // The pointer starts on this line and ends on another
-    from, _ if line_number == from ->
-      string.length(text) - string.length(padding) + 1
+      // The pointer starts on this line and ends on another
+      from, _ if line_number == from ->
+        string_width.line(text) - string.length(padding) + 1
 
-    // The pointer ends on this line
-    _, to if line_number == to -> pos.to.column - 1
+      // The pointer ends on this line
+      _, to if line_number == to -> pos.to.column - 1
 
-    // An intermediate line between the start and end
-    _, _ -> string.length(text)
-  }
+      // An intermediate line between the start and end
+      _, _ -> string_width.line(text)
+    }
+    |> int.max(1)
 
   let pointer =
     string.repeat("^", width)
@@ -396,8 +407,8 @@ fn render_pointer(
 
 fn render_note(note: Note, ctx: Ctx) -> String {
   let prefix = case note {
-    Note(_) -> ctx.note_color("Note: ")
-    Hint(_) -> ctx.hint_color("Hint: ")
+    Note(_) -> ctx.note_color("Note:")
+    Hint(_) -> ctx.hint_color("Hint:")
     Text(_) -> ""
   }
 
@@ -433,12 +444,29 @@ fn get_relevant_lines(report: Report) -> List(#(Int, String)) {
 /// ctx's `number_offset`.
 ///
 /// ```
-/// gutter(inner: "1", after: "|", ctx:) // given number_offset = 3
-/// //-> "  1 |"
+/// // given number_offset = 3
+///
+/// gutter(inner: Some("1"), after: "| foo", ctx:)
+/// //-> "  1 | foo"
+///
+/// gutter(inner: None, after: "| foo", ctx:)
+/// //-> "    | foo"
 /// ```
-fn gutter(inner inner: String, after after: String, ctx ctx: Ctx) -> String {
-  string.repeat(" ", ctx.number_offset - string.length(inner))
-  <> inner
+fn gutter(
+  inner inner: Option(String),
+  after after: String,
+  ctx ctx: Ctx,
+) -> String {
+  case inner {
+    None -> string.repeat(" ", ctx.number_offset)
+    Some(inner) ->
+      string_width.align(
+        inner,
+        align: string_width.Right,
+        to: ctx.number_offset,
+        with: " ",
+      )
+  }
   <> " "
   <> after
 }
@@ -449,56 +477,25 @@ fn pos_to_string(pos: Position) -> String {
   line <> ":" <> column
 }
 
+const max_lines = 999_999
+
 fn wrap_with_prefix(text: String, prefix: String, ctx: Ctx) -> String {
-  let prefix_length = string.length(ansi.strip(prefix))
-
-  case to_lines(text, ctx.max_width - prefix_length) {
-    [] -> prefix
-    [line, ..lines] -> {
-      use acc, line <- list.fold(lines, from: prefix <> line)
-      acc <> "\n" <> string.repeat(" ", prefix_length) <> line
-    }
+  let prefix_length = string_width.line(prefix)
+  let gap = case prefix_length {
+    0 -> 0
+    _ -> 1
   }
-}
 
-/// Stolen from:
-/// https://github.com/giacomocavalieri/birdie/blob/2dfaad38dd84e14e8b2fe9a9adf07a760e873fa2/src/birdie.gleam#L709
-/// Thanks Jak!! 💖
-fn to_lines(string: String, max_length: Int) -> List(String) {
-  // We still want to keep the original lines, so we work line by line.
-  use line <- list.flat_map(string.split(string, on: "\n"))
-  let words = string.split(line, on: " ")
-  do_to_lines([], "", 0, words, max_length)
-}
-
-fn do_to_lines(
-  lines: List(String),
-  line: String,
-  line_length: Int,
-  words: List(String),
-  max_length: Int,
-) -> List(String) {
-  case words {
-    [] ->
-      case line == "" {
-        True -> list.reverse(lines)
-        False -> list.reverse([line, ..lines])
-      }
-
-    [word, ..rest] -> {
-      let word_length = string.length(word)
-      let new_line_length = word_length + line_length + 1
-      // ^ With the +1 we account for the whitespace that separates words!
-      case new_line_length > max_length {
-        True -> do_to_lines([line, ..lines], "", 0, words, max_length)
-        False -> {
-          let new_line = case line {
-            "" -> word
-            _ -> line <> " " <> word
-          }
-          do_to_lines(lines, new_line, new_line_length, rest, max_length)
-        }
-      }
-    }
-  }
+  [
+    prefix,
+    text
+      |> string_width.limit(
+        string_width.Size(
+          rows: max_lines,
+          columns: ctx.max_width - prefix_length - gap,
+        ),
+        ellipsis: "",
+      ),
+  ]
+  |> string_width.stack_horizontal(place: string_width.Top, gap:, with: " ")
 }

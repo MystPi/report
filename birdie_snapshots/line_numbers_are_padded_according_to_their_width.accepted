@@ -3,7 +3,7 @@ version: 1.2.3
 title: line numbers are padded according to their width
 ---
 Info: look at the number padding (also note that empty lines do not have a
-      pointer)
+      pointer)                                                            
 
     ┌─[report_test.gleam@9:1-100:6]────────────────────────────────────────────╼
   9 │ 

@@ -9,13 +9,13 @@ Error: Type mismatch
 ╾──┘            ^^ this is the wrong type
 
 Lorem ipsum odor amet, consectetuer adipiscing elit. Rhoncus placerat sem vitae
-hendrerit euismod netus dapibus orci. Commodo donec non felis amet natoque
-accumsan?
+hendrerit euismod netus dapibus orci. Commodo donec non felis amet natoque     
+accumsan?                                                                      
 
 Hint: Lorem ipsum odor amet, consectetuer adipiscing elit. Rhoncus placerat sem
-      vitae hendrerit euismod netus dapibus orci. Commodo donec non felis amet
-      natoque accumsan?
+      vitae hendrerit euismod netus dapibus orci. Commodo donec non felis amet 
+      natoque accumsan?                                                        
 
 Note: Lorem ipsum odor amet, consectetuer adipiscing elit. Rhoncus placerat sem
-      vitae hendrerit euismod netus dapibus orci. Commodo donec non felis amet
-      natoque accumsan?
+      vitae hendrerit euismod netus dapibus orci. Commodo donec non felis amet 
+      natoque accumsan?                                                        
