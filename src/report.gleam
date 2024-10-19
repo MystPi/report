@@ -2,8 +2,6 @@ import gleam/bool
 import gleam/int
 import gleam/list
 import gleam/option.{type Option, None, Some}
-import gleam/order
-import gleam/pair
 import gleam/result
 import gleam/string
 import gleam_community/ansi
@@ -212,37 +210,12 @@ pub fn with_context(
 /// //-> "Error: ..."
 /// ```
 pub fn to_string(report: Report, style has_style: Bool) -> String {
-  let #(relevant_lines, largest) = get_relevant_lines(report)
-  let style = fn(style_fn) {
-    case has_style {
-      True -> style_fn
-      False -> fn(s) { s }
-    }
-  }
-  let color = case report.level {
-    Error -> ansi.red
-    Warning -> ansi.yellow
-    Info -> ansi.blue
-  }
-  let ctx =
-    Ctx(
-      color: style(color),
-      dim: style(ansi.dim),
-      bold: style(ansi.bold),
-      hint_color: style(ansi.green),
-      note_color: style(ansi.blue),
-      context_color: style(ansi.cyan),
-      width: term_size.columns() |> result.unwrap(80) |> int.min(80),
-      relevant_lines:,
-      number_offset: largest
-        |> int.to_string
-        |> string.length,
-    )
+  let ctx = init_ctx(report, has_style)
 
   let header = render_header(report, ctx)
   let location = render_location(report, ctx)
   let lines =
-    relevant_lines
+    ctx.relevant_lines
     |> list.flat_map(render_line(_, report, ctx))
     |> string.join("\n")
   let notes =
@@ -272,12 +245,48 @@ type Ctx {
     note_color: fn(String) -> String,
     context_color: fn(String) -> String,
     // Max width for rendering, used for wrapping text and other things
-    width: Int,
+    max_width: Int,
     // Lines that should be rendered
     relevant_lines: List(#(Int, String)),
     // This number refers to the width (in characters) of the largest line number
     // in the `relevant_lines`
     number_offset: Int,
+  )
+}
+
+fn init_ctx(report: Report, has_style: Bool) -> Ctx {
+  let relevant_lines = get_relevant_lines(report)
+
+  let number_offset =
+    list.fold(relevant_lines, 0, fn(acc, line) { int.max(acc, line.0) })
+    |> int.to_string
+    |> string.length
+
+  let style = fn(style_fn) {
+    case has_style {
+      True -> style_fn
+      False -> fn(x) { x }
+    }
+  }
+
+  let color =
+    case report.level {
+      Error -> ansi.red
+      Warning -> ansi.yellow
+      Info -> ansi.blue
+    }
+    |> style
+
+  Ctx(
+    color:,
+    dim: style(ansi.dim),
+    bold: style(ansi.bold),
+    hint_color: style(ansi.green),
+    note_color: style(ansi.blue),
+    context_color: style(ansi.cyan),
+    max_width: term_size.columns() |> result.unwrap(80) |> int.min(80),
+    relevant_lines:,
+    number_offset:,
   )
 }
 
@@ -298,7 +307,8 @@ fn render_location(report: Report, ctx: Ctx) -> String {
     pos_to_string(report.pos.from) <> "-" <> pos_to_string(report.pos.to)
   let loc = "[" <> report.file <> "@" <> span <> "]"
   let start = gutter(inner: "", after: "┌─" <> loc, ctx:)
-  let end = string.repeat("─", ctx.width - string.length(start) - 1) <> "╼"
+  let end =
+    string.repeat("─", ctx.max_width - string.length(start) - 1) <> "╼"
 
   ctx.dim(start <> end)
 }
@@ -395,8 +405,8 @@ fn render_note(note: Note, ctx: Ctx) -> String {
 }
 
 /// Given a report, find its 'relevant lines' (i.e. the lines that will be
-/// displayed) and the largest line number of those relevant lines.
-fn get_relevant_lines(report: Report) -> #(List(#(Int, String)), Int) {
+/// displayed).
+fn get_relevant_lines(report: Report) -> List(#(Int, String)) {
   let is_relevant = fn(pair) {
     let #(line, _) = pair
     let is_pointed = line >= report.pos.from.line && line <= report.pos.to.line
@@ -411,19 +421,10 @@ fn get_relevant_lines(report: Report) -> #(List(#(Int, String)), Int) {
     is_pointed || in_context
   }
 
-  let relevant =
-    report.source
-    |> string.split("\n")
-    |> list.index_map(fn(line, i) { #(i + 1, line) })
-    |> list.filter(is_relevant)
-
-  let assert Ok(largest) =
-    relevant
-    |> list.map(pair.first)
-    |> list.sort(order.reverse(int.compare))
-    |> list.first
-
-  #(relevant, largest)
+  report.source
+  |> string.split("\n")
+  |> list.index_map(fn(line, i) { #(i + 1, line) })
+  |> list.filter(is_relevant)
 }
 
 // HELPERS ---------------------------------------------------------------------
@@ -451,7 +452,7 @@ fn pos_to_string(pos: Position) -> String {
 fn wrap_with_prefix(text: String, prefix: String, ctx: Ctx) -> String {
   let prefix_length = string.length(ansi.strip(prefix))
 
-  case to_lines(text, ctx.width - prefix_length) {
+  case to_lines(text, ctx.max_width - prefix_length) {
     [] -> prefix
     [line, ..lines] -> {
       use acc, line <- list.fold(lines, from: prefix <> line)
