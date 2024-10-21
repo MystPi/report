@@ -95,7 +95,7 @@ pub fn lines_test() {
   |> birdie.snap("positions can span multiple lines")
 }
 
-pub fn notes_test() {
+pub fn additional_info_test() {
   report.error(
     file:,
     source:,
@@ -104,10 +104,10 @@ pub fn notes_test() {
     to: #(13, 14),
     label: "this is the wrong type",
   )
-  |> report.with_notes([
+  |> report.with_info([
     report.Text(lorem),
-    report.Hint(lorem),
-    report.Note(lorem),
+    report.Note("Hint", lorem),
+    report.Note("Note", lorem),
   ])
   |> report.to_string(style:)
   |> birdie.snap("reports can have attached notes, hints, and text")

@@ -19,7 +19,7 @@ pub opaque type Report {
     pos: Span,
     level: Level,
     label: String,
-    notes: List(Note),
+    info: List(Info),
     context: Option(Context),
   )
 }
@@ -30,16 +30,14 @@ type Level {
   Info
 }
 
-/// A note is some additional information attached to the end of a report.
-pub type Note {
-  /// Results in `Note: <message>`
-  Note(message: String)
-  /// Results in `Hint: <message>`
-  Hint(message: String)
+/// Some additional information attached to the end of a report.
+pub type Info {
   /// Results in the text passed in without any prefix. This is an improvement
   /// over simply appending text to the generated report since the message will
   /// be wrapped nicely on multiple lines as needed.
   Text(message: String)
+  /// Results in `<prefix>: <message>`
+  Note(prefix: String, message: String)
 }
 
 type Context {
@@ -81,7 +79,7 @@ pub fn error(
     pos: span(from, to),
     level: Error,
     label:,
-    notes: [],
+    info: [],
     context: None,
   )
 }
@@ -111,7 +109,7 @@ pub fn warning(
     pos: span(from, to),
     level: Warning,
     label:,
-    notes: [],
+    info: [],
     context: None,
   )
 }
@@ -141,7 +139,7 @@ pub fn info(
     pos: span(from, to),
     level: Info,
     label:,
-    notes: [],
+    info: [],
     context: None,
   )
 }
@@ -153,17 +151,17 @@ fn span(from: #(Int, Int), to: #(Int, Int)) -> Span {
   )
 }
 
-/// Add [`Note`](#Note)s to a report.
+/// Add [`Info`](#Info) to a report.
 ///
 /// ```
 /// report.error(...)
-/// |> report.with_notes([
-///   report.Note("this is a note"),
-///   report.Hint("this is a hint"),
+/// |> report.with_info([
+///   report.Note("Hint", "this is a hint"),
+///   report.Text("lorem..."),
 /// ])
 /// ```
-pub fn with_notes(report: Report, notes: List(Note)) -> Report {
-  Report(..report, notes:)
+pub fn with_info(report: Report, info: List(Info)) -> Report {
+  Report(..report, info:)
 }
 
 /// Context enables an additional location to be pointed out in the source with
@@ -213,22 +211,22 @@ pub fn to_string(report: Report, style has_style: Bool) -> String {
   let ctx = init_ctx(report, has_style)
 
   let header = render_header(report, ctx)
-  let location = render_location(report, ctx)
   let lines =
     ctx.relevant_lines
     |> list.flat_map(render_line(_, report, ctx))
     |> string.join("\n")
-  let notes =
-    report.notes |> list.map(render_note(_, ctx)) |> string.join("\n\n")
+  let info = report.info |> list.map(render_info(_, ctx)) |> string.join("\n\n")
 
   header
-  <> "\n\n"
-  <> location
+  <> "\n"
+  <> full_line("┌", ctx)
   <> "\n"
   <> lines
-  <> case report.notes {
+  <> "\n"
+  <> full_line("└", ctx)
+  <> case report.info {
     [] -> ""
-    _ -> "\n\n" <> notes
+    _ -> "\n" <> info
   }
 }
 
@@ -241,9 +239,8 @@ type Ctx {
     color: fn(String) -> String,
     dim: fn(String) -> String,
     bold: fn(String) -> String,
-    hint_color: fn(String) -> String,
-    note_color: fn(String) -> String,
     context_color: fn(String) -> String,
+    terminal_width: Int,
     // Max width for rendering, used for wrapping text and other things
     max_width: Int,
     // Lines that should be rendered
@@ -277,19 +274,18 @@ fn init_ctx(report: Report, has_style: Bool) -> Ctx {
     }
     |> style
 
-  let max_width =
+  let terminal_width =
     string_width.get_terminal_size()
     |> result.map(fn(size) { size.columns })
     |> result.unwrap(80)
-    |> int.min(80)
+  let max_width = terminal_width |> int.min(80)
 
   Ctx(
     color:,
     dim: style(ansi.dim),
     bold: style(ansi.bold),
-    hint_color: style(ansi.green),
-    note_color: style(ansi.blue),
     context_color: style(ansi.cyan),
+    terminal_width:,
     max_width:,
     relevant_lines:,
     number_offset:,
@@ -298,25 +294,26 @@ fn init_ctx(report: Report, has_style: Bool) -> Ctx {
 
 fn render_header(report: Report, ctx: Ctx) -> String {
   let level = case report.level {
-    Error -> "Error"
-    Warning -> "Warning"
-    Info -> "Info"
+    Error -> "error:"
+    Warning -> "warning:"
+    Info -> "info:"
   }
 
-  let prefix = ctx.color(level <> ":")
+  let in = "in:"
 
-  report.message |> wrap_with_prefix(prefix, ctx) |> ctx.bold
-}
+  let message =
+    report.message
+    |> wrap_with_prefix(ctx.color(level), at: ctx.max_width)
+    |> ctx.bold
 
-fn render_location(report: Report, ctx: Ctx) -> String {
+  let padding = string.repeat(" ", string.length(level) - string.length(in))
   let span =
     pos_to_string(report.pos.from) <> "-" <> pos_to_string(report.pos.to)
-  let loc = "[" <> report.file <> "@" <> span <> "]"
-  let start = gutter(inner: None, after: "┌─" <> loc, ctx:)
-  let end =
-    string.repeat("─", ctx.max_width - string.length(start) - 1) <> "╼"
+  let location =
+    { report.file <> ctx.dim("@" <> span) }
+    |> wrap_with_prefix(padding <> ctx.color(in), at: ctx.max_width)
 
-  ctx.dim(start <> end)
+  message <> "\n" <> location
 }
 
 fn render_line(line: #(Int, String), report: Report, ctx: Ctx) -> List(String) {
@@ -366,10 +363,7 @@ fn render_pointer(
       || !{ line_number >= pos.from.line && line_number <= pos.to.line },
   )
 
-  let prefix = case line_number == pos.to.line {
-    True -> ctx.dim("╾" <> string.repeat("─", ctx.number_offset) <> "┘")
-    False -> gutter(inner: Some("·"), after: "│", ctx:) |> ctx.dim
-  }
+  let prefix = gutter(inner: None, after: "│", ctx:) |> ctx.dim
 
   let padding =
     case line_number == pos.from.line {
@@ -405,14 +399,29 @@ fn render_pointer(
   [prefix <> padding <> ctx.color(pointer)]
 }
 
-fn render_note(note: Note, ctx: Ctx) -> String {
-  let prefix = case note {
-    Note(_) -> ctx.note_color("Note:")
-    Hint(_) -> ctx.hint_color("Hint:")
-    Text(_) -> ""
+fn render_info(info_bit: Info, ctx: Ctx) -> String {
+  let at = ctx.max_width - ctx.number_offset - 1
+  let message = case info_bit {
+    Text(message) -> message |> wrap_with_prefix("", at:)
+    Note(prefix:, message:) ->
+      message |> wrap_with_prefix(ctx.bold(prefix <> ":"), at:)
   }
 
-  note.message |> wrap_with_prefix(prefix, ctx)
+  string_width.stack_horizontal(
+    [string.repeat(" ", ctx.number_offset), message],
+    place: string_width.Top,
+    gap: 1,
+    with: " ",
+  )
+}
+
+fn full_line(prefix: String, ctx: Ctx) -> String {
+  let padding = string.repeat(" ", ctx.number_offset + 1)
+  ctx.dim(
+    padding
+    <> prefix
+    <> string.repeat("─", ctx.terminal_width - ctx.number_offset - 2),
+  )
 }
 
 /// Given a report, find its 'relevant lines' (i.e. the lines that will be
@@ -479,7 +488,7 @@ fn pos_to_string(pos: Position) -> String {
 
 const max_lines = 999_999
 
-fn wrap_with_prefix(text: String, prefix: String, ctx: Ctx) -> String {
+fn wrap_with_prefix(text: String, prefix: String, at width: Int) -> String {
   let prefix_length = string_width.line(prefix)
   let gap = case prefix_length {
     0 -> 0
@@ -490,10 +499,7 @@ fn wrap_with_prefix(text: String, prefix: String, ctx: Ctx) -> String {
     prefix,
     text
       |> string_width.limit(
-        string_width.Size(
-          rows: max_lines,
-          columns: ctx.max_width - prefix_length - gap,
-        ),
+        string_width.Size(rows: max_lines, columns: width - prefix_length - gap),
         ellipsis: "",
       ),
   ]

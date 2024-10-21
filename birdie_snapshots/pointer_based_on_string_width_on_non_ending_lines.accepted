@@ -2,12 +2,13 @@
 version: 1.2.3
 title: pointer based on string width on non-ending lines
 ---
-Info: editors may not display characters the same way
-
-  ┌─[report_test.gleam@1:5-3:3]────────────────────────────────────────────────╼
+info: editors may not display characters the same way
+  in: report_test.gleam@1:5-3:3
+  ┌─────────────────────────────────────────────────────────────────────────────
 1 │ 안녕하세요
-· │     ^^^^^^
+  │     ^^^^^^
 2 │ 안녕하세요
-· │ ^^^^^^^^^^
+  │ ^^^^^^^^^^
 3 │ 안녕하세요
-╾─┘ ^^ 
+  │ ^^ 
+  └─────────────────────────────────────────────────────────────────────────────

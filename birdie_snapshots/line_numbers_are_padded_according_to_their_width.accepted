@@ -2,10 +2,10 @@
 version: 1.2.3
 title: line numbers are padded according to their width
 ---
-Info: look at the number padding (also note that empty lines do not have a
+info: look at the number padding (also note that empty lines do not have a
       pointer)                                                            
-
-    ┌─[report_test.gleam@9:1-100:6]────────────────────────────────────────────╼
+  in: report_test.gleam@9:1-100:6
+    ┌───────────────────────────────────────────────────────────────────────────
   9 │ 
  10 │ 
  11 │ 
@@ -98,3 +98,4 @@ Info: look at the number padding (also note that empty lines do not have a
  98 │ 
  99 │ 
 100 │ 
+    └───────────────────────────────────────────────────────────────────────────
