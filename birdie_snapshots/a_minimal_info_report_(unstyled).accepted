@@ -1,10 +1,10 @@
 ---
 version: 1.2.3
-title: a minimal error report
+title: a minimal info report (unstyled)
 ---
-error: Invalid syntax
-   in: report_test.gleam@1:1-1:6
+info: Invalid syntax
+  in: report_test.gleam@1:1-1:6
   ┌─────────────────────────────────────────────────────────────────────────────
 1 │ imprt gleam
-  │ ^^^^^ I don't know what this means
+  │ ━━━━━ I don't know what this means
   └─────────────────────────────────────────────────────────────────────────────

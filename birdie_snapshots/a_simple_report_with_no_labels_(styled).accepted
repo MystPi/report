@@ -1,0 +1,6 @@
+---
+version: 1.2.3
+title: a simple report with no labels (styled)
+---
+[1m[34minfo:[39m A very informative message for you to read[22m
+  [34min:[39m report_test.gleam

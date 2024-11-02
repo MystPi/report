@@ -1,10 +1,12 @@
 ---
 version: 1.2.3
-title: positions are pointed to
+title: labels on the same line are rendered stepwise (unstyled)
 ---
 error: Type mismatch
    in: report_test.gleam@13:12-13:14
    ┌────────────────────────────────────────────────────────────────────────────
 13 │     Baz -> 50
-   │            ^^ this is the wrong type
+   │     ┬── ┬╌ ━━ this is the wrong type
+   │     │   ╰╴ in this case branch
+   │     ╰╴ pattern
    └────────────────────────────────────────────────────────────────────────────

@@ -1,14 +1,13 @@
 ---
 version: 1.2.3
-title: pointer based on string width on non-ending lines
+title: labels can overlap each other (unstyled)
 ---
-info: editors may not display characters the same way
-  in: report_test.gleam@1:5-3:3
+error: Syntax error
+   in: report_test.gleam@1:13-1:15
   ┌─────────────────────────────────────────────────────────────────────────────
-1 │ 안녕하세요
-  │     ^^^^^^
-2 │ 안녕하세요
-  │ ^^^^^^^^^^
-3 │ 안녕하세요
-  │ ^^ 
+1 │ [43, 23, 34 43]
+  │ ┬╌╌╌╌╌╌╌╌┬─╌┯━╌
+  │ │        │  ╰╴ wanted , or ] here
+  │ │        ╰╴ after this number
+  │ ╰╴ in this list
   └─────────────────────────────────────────────────────────────────────────────

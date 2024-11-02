@@ -1,0 +1,27 @@
+---
+version: 1.2.3
+title: README example (unstyled)
+---
+error: `case` clauses have incompatible types
+   in: FizzBuzz.fun@7:16-7:19
+  ┌─────────────────────────────────────────────────────────────────────────────
+1 │   fizz₂ : Nat -> String
+  │                  ────── expected type `String` found here
+  · 
+3 │       case (mod num 5) (mod num 3) of
+  │ ╭─────^
+4 │ │         0 0 => "FizzBuzz"
+  │ │                ────────── this is found to be of type `String`
+5 │ │         0 _ => "Fizz"
+  │ │                ────── this is found to be of type `String`
+6 │ │         _ 0 => "Buzz"
+  │ │                ────── this is found to be of type `String`
+7 │ │         _ _ => num
+  │ │                ━━━ expected `String`, found `Nat`
+  │ ╰──────────────────^ `case` clauses have incompatible types
+  └─────────────────────────────────────────────────────────────────────────────
+  expected type = String
+     found type = Nat   
+
+  All `case` clauses must evaluate to the same type, but the indicated branch
+  does not have the same type as the others.                                 

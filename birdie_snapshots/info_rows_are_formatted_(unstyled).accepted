@@ -1,0 +1,15 @@
+---
+version: 1.2.3
+title: info rows are formatted (unstyled)
+---
+info: What nice rows!
+  in: report_test.gleam
+        foo: bar
+     foobar: baz
+  foobarbaz: qux
+
+  expected type -> SomeType                                                    
+     found type -> SomeOtherType                                               
+         reason -> Lorem ipsum odor amet, consectetuer adipiscing elit. Rhoncus
+                   placerat sem vitae hendrerit euismod netus dapibus orci.    
+                   Commodo donec non felis amet natoque accumsan?              

@@ -1,14 +1,13 @@
 ---
 version: 1.2.3
-title: reports can have additional context
+title: reports can have context labels (unstyled)
 ---
 error: Type mismatch
    in: report_test.gleam@13:12-13:14
    ┌────────────────────────────────────────────────────────────────────────────
-   │   ┌─ in this case expression
-   │   ┆
 11 │   case foo {
-12 │     Bar -> 3.14
+   │   ╌╌╌╌ in this case expression
+   · 
 13 │     Baz -> 50
-   │            ^^ this is the wrong type
+   │            ━━ this is the wrong type
    └────────────────────────────────────────────────────────────────────────────

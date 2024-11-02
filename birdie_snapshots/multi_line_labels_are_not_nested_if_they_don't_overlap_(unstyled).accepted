@@ -1,0 +1,29 @@
+---
+version: 1.2.3
+title: multi-line labels are not nested if they don't overlap (unstyled)
+---
+warning: Lorem ipsum odor amet, consectetuer adipiscing elit. Rhoncus placerat  
+         sem vitae hendrerit euismod netus dapibus orci. Commodo donec non felis
+         amet natoque accumsan?                                                 
+     in: report_test.gleam@3:1-6:2
+   ┌────────────────────────────────────────────────────────────────────────────
+ 3 │     type Foo {
+   │ ╭───^
+ 4 │ │     Bar
+ 5 │ │     Baz
+ 6 │ │   }
+   │ ╰───^ this is a type
+   · 
+ 8 │     pub fn main() {
+   │ ╭───^
+ 9 │ │     let foo = Baz
+10 │ │   
+11 │ │     case foo {
+   │ │ ╭───^
+12 │ │ │     Bar -> 3.14
+13 │ │ │     Baz -> 50
+14 │ │ │   }
+   │ │ ╰───^ this is a case expression
+15 │ │   }
+   │ ╰───^ this is a function
+   └────────────────────────────────────────────────────────────────────────────

@@ -1,0 +1,15 @@
+---
+version: 1.2.3
+title: info rows are formatted (styled)
+---
+[1m[34minfo:[39m What nice rows![22m
+  [34min:[39m report_test.gleam
+  [1m      foo[22m[2m: [22mbar
+  [1m   foobar[22m[2m: [22mbaz
+  [1mfoobarbaz[22m[2m: [22mqux
+
+  [1mexpected type[22m[2m -> [22mSomeType                                                    
+  [1m   found type[22m[2m -> [22mSomeOtherType                                               
+  [1m       reason[22m[2m -> [22mLorem ipsum odor amet, consectetuer adipiscing elit. Rhoncus
+                   placerat sem vitae hendrerit euismod netus dapibus orci.    
+                   Commodo donec non felis amet natoque accumsan?              

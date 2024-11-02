@@ -1,10 +1,10 @@
 ---
 version: 1.2.3
-title: context cannnot be past the reported position
+title: positions are pointed to (unstyled)
 ---
 error: Type mismatch
    in: report_test.gleam@13:12-13:14
    ┌────────────────────────────────────────────────────────────────────────────
 13 │     Baz -> 50
-   │            ^^ this is the wrong type
+   │            ━━ this is the wrong type
    └────────────────────────────────────────────────────────────────────────────

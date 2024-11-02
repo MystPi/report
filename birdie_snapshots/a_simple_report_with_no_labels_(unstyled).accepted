@@ -1,0 +1,6 @@
+---
+version: 1.2.3
+title: a simple report with no labels (unstyled)
+---
+info: A very informative message for you to read
+  in: report_test.gleam

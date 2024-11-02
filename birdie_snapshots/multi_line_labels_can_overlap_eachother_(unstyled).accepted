@@ -1,0 +1,25 @@
+---
+version: 1.2.3
+title: multi-line labels can overlap eachother (unstyled)
+---
+info: They overlap!
+  in: report_test.gleam@3:1-6:2
+   ┌────────────────────────────────────────────────────────────────────────────
+ 3 │       type Foo {
+   │ ╭─────^
+ 4 │ │       Bar
+   │ │ ╭─────^
+ 5 │ │ │     Baz
+   │ │ │ ╭───^
+   │ │ ╰─│─────^ what are these even for?
+ 6 │ │   │ }
+   │ ╰───│─^ this type is pointless
+ 7 │     │ 
+ 8 │     │ pub fn main() {
+ 9 │     │   let foo = Baz
+10 │     │ 
+11 │     │   case foo {
+12 │     │     Bar -> 3.14
+13 │     │     Baz -> 50
+   │     ╰───────^ very cool
+   └────────────────────────────────────────────────────────────────────────────

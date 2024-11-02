@@ -1,0 +1,16 @@
+---
+version: 1.2.3
+title: line numbers are padded according to the largest width (unstyled)
+---
+info: look at the number padding (also note the break)
+  in: report_test.gleam
+    ┌───────────────────────────────────────────────────────────────────────────
+  1 │ a line
+    │ ╌╌╌╌╌╌ start
+    · 
+ 50 │ a line
+    │ ╌╌╌╌╌╌ middle
+    · 
+100 │ a line
+    │ ╌╌╌╌╌╌ end
+    └───────────────────────────────────────────────────────────────────────────

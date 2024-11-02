@@ -1,0 +1,13 @@
+---
+version: 1.2.3
+title: reports can have context labels (styled)
+---
+[1m[31merror:[39m Type mismatch[22m
+   [31min:[39m report_test.gleam[2m@13:12-13:14[22m
+[2m   ┌────────────────────────────────────────────────────────────────────────────[22m
+[2m11[22m [2m│[22m   case foo {
+   [2m│[22m   [2m╌[22m[2m╌[22m[2m╌[22m[2m╌[22m [2min this case expression[22m
+[2m   [2m·[2m [22m
+[2m13[22m [2m│[22m     Baz -> [31m50[39m
+   [2m│[22m            [31m━[39m[31m━[39m [31mthis is the wrong type[39m
+[2m   └────────────────────────────────────────────────────────────────────────────[22m
