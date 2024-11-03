@@ -5,7 +5,6 @@
 
 Create informative & beautiful source code reports.
 
-
 ![example report output](./assets/example_output.png)
 
 ## Usage
@@ -22,39 +21,69 @@ The following code will display the demo report found in the image above.
 import gleam/io
 import report
 
-const source = "type Foo {
-  Bar
-  Baz
-}
+/// The source code to be annotated in the report.
+const source = "fizz₂ : Nat -> String
+fizz₂ num =
+    case (mod num 5) (mod num 3) of
+        0 0 => \"FizzBuzz\"
+        0 _ => \"Fizz\"
+        _ 0 => \"Buzz\"
+        _ _ => num"
 
 pub fn main() {
-  let foo = Baz
+  let file = "FizzBuzz.fun"
+  let message = "`case` clauses have incompatible types"
 
-  case foo {
-    Bar -> 3.14
-    Baz -> 50
-  }
-}"
+  // Labels add annotations to the source code. There is normally one primary
+  // label and any number of secondary and context labels.
+  let labels = [
+    report.primary_label(
+      message: "expected `String`, found `Nat`",
+      from: #(7, 16),
+      to: #(7, 19),
+    ),
+    report.context_label(
+      message: "`case` clauses have incompatible types",
+      from: #(3, 5),
+      to: #(7, 19),
+    ),
+    report.secondary_label(
+      message: "this is found to be of type `String`",
+      from: #(4, 16),
+      to: #(4, 26),
+    ),
+    report.secondary_label(
+      message: "this is found to be of type `String`",
+      from: #(5, 16),
+      to: #(5, 22),
+    ),
+    report.secondary_label(
+      message: "this is found to be of type `String`",
+      from: #(6, 16),
+      to: #(6, 22),
+    ),
+    report.secondary_label(
+      message: "expected type `String` found here",
+      from: #(1, 16),
+      to: #(1, 22),
+    ),
+  ]
 
-pub fn main() {
+  // Additional information can be added to the end of a report.
+  let info = [
+    report.Rows(
+      rows: [#("expected type", "String"), #("found type", "Nat")],
+      divider: " = ",
+    ),
+    report.Text(
+      "All `case` clauses must evaluate to the same type, but the indicated branch does not have the same type as the others.",
+    ),
+  ]
+
   // Create an error report. This could also be `report.warning` or `report.info`.
-  report.error(
-    file: "test_module.gleam",
-    source:,
-    message: "Type mismatch",
-    from: #(11, 12),
-    to: #(11, 14),
-    label: "I wanted a `Float` but got an `Int`",
-  )
-  // Context points to a location in the source with the given message, providing
-  // a way to point out helpful landmarks in the surrounding code.
-  |> report.with_context(#(9, 3), "in this case expression")
-  // Add additional information to the report with notes.
-  |> report.with_notes([
-    report.Text("All case branches must evaluate to the same type, but this branch did not evaluate to the type I wanted: Float"),
-    report.Hint("Since this value is an integer literal, the suffix `.0` can be appended to the number to turn it into a Float. This will solve the problem!")
-  ])
-  // Finally, turn the report into a string with styling enabled.
+  report.error(file:, source:, message:, labels:, info:)
+  // Finally, turn the report into a string with styling enabled then log the
+  // result to the console.
   |> report.to_string(style: True)
   |> io.println_error
 }
@@ -75,4 +104,4 @@ gleam test  # Run the tests
 
 ## Inspiration
 
-This package is inspired by similar projects such as [Hug](https://hexdocs.pm/hug/), [Diagnose](https://github.com/Mesabloo/diagnose), and [Codespan Reporting](https://github.com/brendanzab/codespan). `report` is most similar to Hug API-wise.
+This package is inspired by similar projects such as [`hug`](https://hexdocs.pm/hug/), [`diagnose`](https://github.com/Mesabloo/diagnose), and [`codespan-reporting`](https://github.com/brendanzab/codespan). The example above is based on the example in `codespan-reporting`'s README.
