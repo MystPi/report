@@ -89,7 +89,8 @@ pub opaque type Label {
 /// - `file`: The name or path of the source file.
 /// - `source`: The source code of the file.
 /// - `message`: A short message describing the report, such as `Type mismatch`.
-/// - `labels`: A list of labels to annotate the source code.
+/// - `labels`: A list of labels to annotate the source code. If multiple labels
+/// in the list overlap, the first in the list will take precedence.
 /// - `info`: A list of [`Info`](#Info) messages to add to the end of the report.
 pub fn error(
   file file: String,
@@ -109,7 +110,8 @@ pub fn error(
 /// - `file`: The name or path of the source file.
 /// - `source`: The source code of the file.
 /// - `message`: A short message describing the report, such as `Unused function`.
-/// - `labels`: A list of labels to annotate the source code.
+/// - `labels`: A list of labels to annotate the source code. If multiple labels
+/// in the list overlap, the first in the list will take precedence.
 /// - `info`: A list of [`Info`](#Info) messages to add to the end of the report.
 pub fn warning(
   file file: String,
@@ -127,7 +129,8 @@ pub fn warning(
 /// - `file`: The name or path of the source file.
 /// - `source`: The source code of the file.
 /// - `message`: A short message describing the report.
-/// - `labels`: A list of labels to annotate the source code.
+/// - `labels`: A list of labels to annotate the source code. If multiple labels
+/// in the list overlap, the first in the list will take precedence.
 /// - `info`: A list of [`Info`](#Info) messages to add to the end of the report.
 pub fn info(
   file file: String,
