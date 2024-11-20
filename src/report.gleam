@@ -104,8 +104,6 @@ pub fn error(
 
 /// Create a warning report.
 ///
-/// Create an error report.
-///
 /// Parameters:
 /// - `file`: The name or path of the source file.
 /// - `source`: The source code of the file.
