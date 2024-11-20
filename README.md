@@ -5,6 +5,8 @@
 
 Create informative & beautiful source code reports.
 
+> Note: this package is not ready for production yet.
+
 ![example report output](./assets/example_output.png)
 
 ## Usage

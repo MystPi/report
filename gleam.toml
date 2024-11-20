@@ -1,5 +1,5 @@
 name = "report"
-version = "1.0.0"
+version = "0.1.0"
 description = "Create informative & beautiful source code reports."
 licences = ["Apache-2.0"]
 repository = { type = "github", user = "MystPi", repo = "report" }
